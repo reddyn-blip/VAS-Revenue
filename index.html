@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Security: only same-origin resources; no network connections permitted.
+       connect-src 'none' provably blocks any attempt to upload your data. -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; connect-src 'none'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <title>Seller Revenue Split — Shipping vs Value-added</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="masthead">
+    <div class="masthead-inner">
+      <div class="wordmark">
+        <span class="tag">REV</span>
+        <h1>Seller Revenue <span>Split</span></h1>
+      </div>
+      <div class="stamp"><span class="dot"></span> PROCESSED LOCALLY</div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- Intake -->
+    <section id="dropzone" class="dropzone" tabindex="0" role="button"
+             aria-label="Upload revenue report. Click or drop a file.">
+      <p class="lead">Drop the revenue report here, or click to choose</p>
+      <p class="sub">The file is read and aggregated entirely inside this browser tab.</p>
+      <button class="btn" type="button" id="chooseBtn">Choose file</button>
+      <p class="formats">.xlsx &nbsp;·&nbsp; .xlsm &nbsp;·&nbsp; .csv &nbsp;·&nbsp; .tsv</p>
+      <input id="file" type="file" accept=".xlsx,.xlsm,.csv,.tsv,.txt" hidden>
+    </section>
+
+    <aside class="privacy-note">
+      <strong>Your data never leaves this device.</strong>
+      <ul>
+        <li>Parsing happens in your browser — nothing is uploaded to any server.</li>
+        <li>No cookies, no storage, no analytics, no third-party code in the data path.</li>
+        <li>A strict Content-Security-Policy blocks all outbound network connections.</li>
+        <li>Reload the page to clear everything from memory.</li>
+      </ul>
+    </aside>
+
+    <!-- Progress -->
+    <div id="progress" class="progress" aria-live="polite">
+      <div class="label">
+        <span id="progressLabel">Working…</span>
+        <span id="progressPct">0%</span>
+      </div>
+      <div class="bar"><i id="bar"></i></div>
+    </div>
+
+    <div id="error" class="error" role="alert"></div>
+
+    <!-- Results -->
+    <section id="results" class="results">
+      <div class="meta-line">
+        <span class="doc" id="fileName"></span>
+        <span id="meta"></span>
+      </div>
+
+      <div class="cards" id="cards"></div>
+
+      <div class="split-panel">
+        <div class="title">Revenue composition</div>
+        <div class="splitbar" id="splitbar"></div>
+        <div class="legend" id="legend"></div>
+      </div>
+
+      <div class="split-panel" id="vasPanel"></div>
+
+      <div class="toolbar">
+        <h2>Per-seller breakdown</h2>
+        <span class="count" id="count"></span>
+        <span class="spacer"></span>
+        <label class="code-filter" id="codeWrap" style="display:none">
+          <span>Accrual code</span>
+          <select id="codeFilter" aria-label="Filter by accrual code"></select>
+        </label>
+        <label class="code-filter" id="vasWrap" style="display:none">
+          <span>VAS product</span>
+          <select id="vasFilter" aria-label="Focus on a VAS product"></select>
+        </label>
+        <input id="search" class="search" type="search" placeholder="Filter by seller or company…" aria-label="Filter sellers">
+        <button class="btn ghost" type="button" id="exportSummary">Export CSV</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead id="thead">
+            <tr>
+              <th class="idx">#</th>
+              <th role="button" tabindex="0" data-key="seller">Seller <span class="arrow">▼</span></th>
+              <th class="col-company">Company</th>
+              <th role="button" tabindex="0" data-key="shipments" class="right">Shipments <span class="arrow">▼</span></th>
+              <th role="button" tabindex="0" data-key="shipping" class="right">Shipping <span class="arrow">▼</span></th>
+              <th role="button" tabindex="0" data-key="vas" class="right">Value-added <span class="arrow">▼</span></th>
+              <th role="button" tabindex="0" data-key="total" class="right sorted">Total <span class="arrow">▼</span></th>
+              <th class="col-split">Split</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div class="more" id="more"></div>
+    </section>
+
+    <footer class="foot">
+      <p>
+        All processing is client-side. Shipping = sum of <code>total_amt</code> per seller;
+        Value-added services = sum of the billed VAS amount columns. Built for static hosting
+        (GitHub Pages) with no backend.
+      </p>
+      <p class="ver">Seller Revenue Split · v1.2 · runs offline</p>
+    </footer>
+  </main>
+
+  <!-- core.js is loaded on the main thread too, as a fallback for environments
+       where Web Workers can't start. The worker loads its own copy. -->
+  <script src="core.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
