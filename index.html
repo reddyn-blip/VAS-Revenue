@@ -350,6 +350,55 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
   .splitbar .seg, .vasrow .vbar > span{ transform:none !important }
 }
 
+/* ---------- Accrual-code multi-select ---------- */
+.ms{ position:relative; display:inline-flex; align-items:center; gap:8px }
+.ms .ms-eyebrow{ font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--tx-faint) }
+.ms-btn{
+  font:inherit; font-size:13px; display:inline-flex; align-items:center; gap:10px; cursor:pointer;
+  padding:8px 11px; border:1px solid var(--line-strong); border-radius:8px; background:var(--surface);
+  color:var(--tx); box-shadow:var(--shadow-sm); min-width:188px; justify-content:space-between;
+}
+.ms-btn:hover{ border-color:var(--ship) }
+.ms-btn.has-sel{ border-color:var(--ship); color:var(--ship-deep); background:var(--ship-tint) }
+.ms-btn .ms-val{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:210px }
+.ms-btn .ms-caret{ color:var(--tx-faint); font-size:11px }
+.ms-pop{
+  position:absolute; top:calc(100% + 6px); right:0; z-index:50; width:320px; max-width:88vw;
+  background:var(--surface); border:1px solid var(--line-strong); border-radius:12px;
+  box-shadow:var(--shadow-lg); padding:12px; animation:rise .14s var(--ease) both;
+}
+.ms-search{
+  width:100%; font:inherit; font-size:13px; padding:8px 11px 8px 32px; border:1px solid var(--line-strong);
+  border-radius:8px; background-color:var(--surface-2);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 15 15'%3E%3Ccircle cx='6.5' cy='6.5' r='4.2' fill='none' stroke='%238b98a8' stroke-width='1.5'/%3E%3Cpath d='M10 10l3.2 3.2' stroke='%238b98a8' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:10px center;
+}
+.ms-actions{ display:flex; align-items:center; gap:10px; margin:10px 2px 8px; font-size:12px }
+.ms-actions button{
+  font:inherit; font-size:12px; cursor:pointer; background:none; border:none; padding:0;
+  color:var(--ship-deep); text-decoration:underline; text-underline-offset:2px;
+}
+.ms-actions button:hover{ color:var(--ship) }
+.ms-actions .ms-count{ margin-left:auto; font-family:var(--mono); color:var(--tx-faint) }
+.ms-list{ max-height:280px; overflow:auto; display:flex; flex-direction:column; gap:1px;
+  border-top:1px solid var(--line); padding-top:6px }
+.ms-opt{
+  display:grid; grid-template-columns:18px 1fr auto; align-items:center; gap:10px;
+  padding:7px 8px; border-radius:7px; cursor:pointer; font-size:13.5px;
+}
+.ms-opt:hover{ background:var(--surface-2) }
+.ms-opt input{ width:15px; height:15px; accent-color:var(--ship); cursor:pointer }
+.ms-opt .ms-name{ font-weight:540 }
+.ms-opt .ms-meta{ font-size:11.5px; color:var(--tx-faint) }
+.ms-list::-webkit-scrollbar{ width:10px }
+.ms-list::-webkit-scrollbar-thumb{ background:var(--line-strong); border-radius:6px; border:3px solid var(--surface) }
+
+@media (max-width:760px){
+  .ms{ width:100% }
+  .ms-btn{ flex:1; min-width:0 }
+  .ms-pop{ left:0; right:auto; width:100% }
+}
+
   </style>
 </head>
 <body>
@@ -419,10 +468,22 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
         <h2>Per-seller breakdown</h2>
         <span class="count" id="count"></span>
         <span class="spacer"></span>
-        <label class="code-filter" id="codeWrap" style="display:none">
-          <span>Accrual code</span>
-          <select id="codeFilter" aria-label="Filter by accrual code"></select>
-        </label>
+        <div class="ms" id="codeMS" style="display:none">
+          <span class="ms-eyebrow">Accrual codes</span>
+          <button type="button" class="ms-btn" id="codeMSBtn" aria-haspopup="true" aria-expanded="false">
+            <span class="ms-val" id="codeMSLabel">All accrual codes</span>
+            <span class="ms-caret" aria-hidden="true">▾</span>
+          </button>
+          <div class="ms-pop" id="codeMSPop" hidden role="dialog" aria-label="Choose accrual codes">
+            <input class="ms-search" id="codeMSSearch" type="search" placeholder="Search codes…" aria-label="Search accrual codes">
+            <div class="ms-actions">
+              <button type="button" id="codeMSAll">Select shown</button>
+              <button type="button" id="codeMSClear">Clear</button>
+              <span class="ms-count" id="codeMSCount">0 selected</span>
+            </div>
+            <div class="ms-list" id="codeMSList" role="group" aria-label="Accrual codes"></div>
+          </div>
+        </div>
         <label class="code-filter" id="vasWrap" style="display:none">
           <span>VAS product</span>
           <select id="vasFilter" aria-label="Focus on a VAS product"></select>
@@ -455,7 +516,7 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
       <p>All processing is client-side. Shipping is the sum of <code>total_amt</code> per
         seller; value-added services is the sum of the billed VAS amount columns. Accrual
         code is <code>accrual_party_id_to</code>. Built for static hosting with no backend.</p>
-      <p class="ver">Seller Revenue Split · v2.0 · single file · runs offline</p>
+      <p class="ver">Seller Revenue Split · v2.1 · single file · runs offline</p>
     </footer>
   </main>
 
@@ -1483,8 +1544,15 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
     exportSummary: document.getElementById('exportSummary'),
     more: document.getElementById('more'),
     fileName: document.getElementById('fileName'),
-    codeFilter: document.getElementById('codeFilter'),
-    codeWrap: document.getElementById('codeWrap'),
+    codeMS: document.getElementById('codeMS'),
+    codeMSBtn: document.getElementById('codeMSBtn'),
+    codeMSLabel: document.getElementById('codeMSLabel'),
+    codeMSPop: document.getElementById('codeMSPop'),
+    codeMSSearch: document.getElementById('codeMSSearch'),
+    codeMSList: document.getElementById('codeMSList'),
+    codeMSAll: document.getElementById('codeMSAll'),
+    codeMSClear: document.getElementById('codeMSClear'),
+    codeMSCount: document.getElementById('codeMSCount'),
     vasFilter: document.getElementById('vasFilter'),
     vasPanel: document.getElementById('vasPanel')
   };
@@ -1494,7 +1562,7 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
     viewFull: [],
     sellers: [],
     filtered: [],
-    code: '',
+    selectedCodes: [],
     codes: [],
     codeStats: {},
     hasAccrual: false,
@@ -1664,30 +1732,82 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
     state.codes = result.codes || [];
     state.codeStats = result.codeStats || {};
     state.hasAccrual = !!result.hasAccrual && state.codes.length > 0;
-    state.code = '';
+    state.selectedCodes = [];
     state.vasProduct = '';
     state.expanded = {};
-    populateCodeFilter();
+    populateCodeMS();
     populateVasFilter();
     buildView();
     els.results.classList.add('on');
     els.results.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  // Populate the accrual-code dropdown (only if the column was present).
-  function populateCodeFilter() {
-    if (!state.hasAccrual) {
-      els.codeWrap.style.display = 'none';
-      return;
-    }
-    els.codeWrap.style.display = '';
-    var opts = ['<option value="">All accrual codes (' + intFmt.format(state.codes.length) + ')</option>'];
-    state.codes.forEach(function (c) {
+  // Build the accrual-code multi-select (only if the column was present).
+  function populateCodeMS() {
+    if (!els.codeMS) return;
+    if (!state.hasAccrual) { els.codeMS.style.display = 'none'; return; }
+    els.codeMS.style.display = '';
+    var rows = state.codes.map(function (c) {
       var cs = state.codeStats[c] || { shipments: 0 };
-      opts.push('<option value="' + esc(c) + '">' + esc(c) + ' \u2014 ' + intFmt.format(cs.shipments) + ' shipments</option>');
+      return '<label class="ms-opt" data-code="' + esc(c) + '">' +
+        '<input type="checkbox" value="' + esc(c) + '">' +
+        '<span class="ms-name">' + esc(c) + '</span>' +
+        '<span class="ms-meta num">' + intFmt.format(cs.shipments) + '</span></label>';
+    }).join('');
+    els.codeMSList.innerHTML = rows;
+    els.codeMSSearch.value = '';
+    updateCodeMSLabel();
+    updateCodeMSCount();
+  }
+
+  function codeSummary() {
+    var n = state.selectedCodes.length;
+    if (n === 0) return '';
+    if (n <= 3) return state.selectedCodes.join(', ');
+    return n + ' accrual codes';
+  }
+
+  function updateCodeMSLabel() {
+    if (!els.codeMSLabel) return;
+    var n = state.selectedCodes.length;
+    els.codeMSLabel.textContent = n === 0
+      ? 'All accrual codes (' + intFmt.format(state.codes.length) + ')'
+      : (n === 1 ? state.selectedCodes[0] : n + ' codes selected');
+    els.codeMSBtn.classList.toggle('has-sel', n > 0);
+  }
+
+  function updateCodeMSCount() {
+    if (els.codeMSCount) els.codeMSCount.textContent = state.selectedCodes.length + ' selected';
+  }
+
+  function filterCodeMSList() {
+    var q = (els.codeMSSearch.value || '').trim().toLowerCase();
+    Array.prototype.forEach.call(els.codeMSList.children, function (lab) {
+      var c = (lab.getAttribute('data-code') || '').toLowerCase();
+      lab.style.display = (!q || c.indexOf(q) > -1) ? '' : 'none';
     });
-    els.codeFilter.innerHTML = opts.join('');
-    els.codeFilter.value = '';
+  }
+
+  function syncSelectedFromCheckboxes() {
+    var picked = [];
+    Array.prototype.forEach.call(els.codeMSList.querySelectorAll('input[type=checkbox]'), function (cb) {
+      if (cb.checked) picked.push(cb.value);
+    });
+    state.selectedCodes = picked;
+    state.expanded = {};
+    updateCodeMSLabel();
+    updateCodeMSCount();
+    buildView();
+  }
+
+  function openCodeMS() {
+    els.codeMSPop.hidden = false;
+    els.codeMSBtn.setAttribute('aria-expanded', 'true');
+    els.codeMSSearch.focus();
+  }
+  function closeCodeMS() {
+    els.codeMSPop.hidden = true;
+    els.codeMSBtn.setAttribute('aria-expanded', 'false');
   }
 
   // Populate the VAS-product dropdown (shown only if there is any VAS revenue).
@@ -1709,23 +1829,36 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
   // No code selected -> each seller's full totals. A code selected -> each
   // seller's slice for just that code (only sellers that used the code).
   function buildView() {
-    var code = state.code;
+    var sel = state.selectedCodes;
     var view;
-    if (!code) {
+    if (!sel.length) {
       view = state.allSellers.map(function (s) {
         return { email: s.email, company: s.company, sellerId: s.sellerId,
                  shipments: s.shipments, shipping: s.shipping, vas: s.vas,
                  vasTotal: s.vasTotal };
       });
     } else {
+      var selSet = {};
+      sel.forEach(function (c) { selSet[c] = 1; });
       view = [];
       for (var i = 0; i < state.allSellers.length; i++) {
         var s = state.allSellers[i];
-        var slot = s.byCode && s.byCode[code];
-        if (!slot) continue;
+        if (!s.byCode) continue;
+        var agg = null;
+        for (var code in s.byCode) {
+          if (!selSet[code]) continue;
+          var slot = s.byCode[code];
+          if (!agg) agg = { shipments: 0, shipping: 0, vas: {}, vasTotal: 0 };
+          agg.shipments += slot.shipments;
+          agg.shipping += slot.shipping;
+          agg.vasTotal += slot.vasTotal;
+          var sv = slot.vas || {};
+          for (var lbl in sv) { agg.vas[lbl] = (agg.vas[lbl] || 0) + sv[lbl]; }
+        }
+        if (!agg) continue; // seller used none of the selected codes
         view.push({ email: s.email, company: s.company, sellerId: s.sellerId,
-                    shipments: slot.shipments, shipping: slot.shipping, vas: slot.vas || {},
-                    vasTotal: slot.vasTotal });
+                    shipments: agg.shipments, shipping: agg.shipping, vas: agg.vas,
+                    vasTotal: agg.vasTotal });
       }
     }
     state.viewFull = view;
@@ -1802,9 +1935,10 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
         '</button>';
     }).join('');
 
+    var codeSum = codeSummary();
     els.vasPanel.innerHTML =
       '<div class="title">Value-added services by product' +
-        (state.code ? ' \u00b7 accrual code ' + esc(state.code) : '') +
+        (codeSum ? ' \u00b7 ' + esc(codeSum) : '') +
         '<span class="vas-grand num">' + money(grand) + ' total</span></div>' +
       '<div class="vaslist">' + rows + '</div>' +
       '<div class="vas-hint">' + (state.vasProduct
@@ -1831,14 +1965,15 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
     }
     var grand = totalShip + totalVas;
     var st = state.stats || {};
-    var code = state.code;
-    var sellerSub = code
-      ? 'using accrual code ' + code
+    var codeSum = codeSummary();
+    var nSel = state.selectedCodes.length;
+    var sellerSub = nSel
+      ? (nSel === 1 ? 'using accrual code ' + codeSum : 'using ' + nSel + ' accrual codes')
       : (st.missingSeller ? intFmt.format(st.missingSeller) + ' shipments had no seller' : 'all shipments attributed');
 
     els.cards.innerHTML = [
       card('Sellers', intFmt.format(view.length), sellerSub, ''),
-      card('Shipments', intFmt.format(shipments), code ? 'for ' + code : 'rows aggregated', ''),
+      card('Shipments', intFmt.format(shipments), nSel ? 'for selected codes' : 'rows aggregated', ''),
       card('Shipping', compact(totalShip), money(totalShip), 'ship'),
       card('Value-added services', compact(totalVas), money(totalVas), 'vas')
     ].join('');
@@ -1846,7 +1981,7 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
     els.fileName.textContent = state.fileName;
     els.meta.innerHTML =
       '<span class="doc">' + esc(state.sheetName || state.fileName) + '</span>' +
-      (code ? '<span class="sep">\u2502</span><span class="code-tag">accrual code ' + esc(code) + '</span>' : '') +
+      (codeSum ? '<span class="sep">\u2502</span><span class="code-tag">' + esc(codeSum) + '</span>' : '') +
       '<span class="sep">\u2502</span><span>' + intFmt.format(view.length) + ' sellers</span>' +
       '<span class="sep">\u2502</span><span>' + intFmt.format(shipments) + ' shipments</span>' +
       '<span class="sep">\u2502</span><span>processed in this browser</span>';
@@ -1902,13 +2037,30 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
     });
   }
 
-  // ---- accrual-code filter ----
-  if (els.codeFilter) {
-    els.codeFilter.addEventListener('change', function () {
-      state.code = els.codeFilter.value || '';
-      state.expanded = {};
-      buildView();
+  // ---- accrual-code multi-select ----
+  if (els.codeMS) {
+    els.codeMSBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (els.codeMSPop.hidden) openCodeMS(); else closeCodeMS();
     });
+    els.codeMSPop.addEventListener('click', function (e) { e.stopPropagation(); });
+    els.codeMSSearch.addEventListener('input', filterCodeMSList);
+    els.codeMSList.addEventListener('change', function (e) {
+      if (e.target && e.target.type === 'checkbox') syncSelectedFromCheckboxes();
+    });
+    els.codeMSAll.addEventListener('click', function () {
+      // select every code currently shown by the search filter
+      Array.prototype.forEach.call(els.codeMSList.children, function (lab) {
+        if (lab.style.display !== 'none') { var cb = lab.querySelector('input'); if (cb) cb.checked = true; }
+      });
+      syncSelectedFromCheckboxes();
+    });
+    els.codeMSClear.addEventListener('click', function () {
+      Array.prototype.forEach.call(els.codeMSList.querySelectorAll('input'), function (cb) { cb.checked = false; });
+      syncSelectedFromCheckboxes();
+    });
+    document.addEventListener('click', function () { if (!els.codeMSPop.hidden) closeCodeMS(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !els.codeMSPop.hidden) closeCodeMS(); });
   }
 
   // ---- VAS product focus ----
@@ -2034,7 +2186,7 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
     var headers = ['accrual_code', 'seller_email', 'company_name', 'seller_id', 'shipments', 'shipping_total', 'value_added_total', 'grand_total'];
     RevenueCore.VAS_FIELDS.forEach(function (p) { headers.push('vas_' + p[1].replace(/^total_|_amt$/g, '')); });
     var lines = [headers.join(',')];
-    var codeCell = state.code || 'ALL';
+    var codeCell = state.selectedCodes.length ? state.selectedCodes.join('|') : 'ALL';
     // Always export the complete per-seller breakdown (every VAS product column),
     // respecting the accrual-code filter but not the on-screen product focus, so
     // nothing is lost. Highest grand total first.
@@ -2056,7 +2208,9 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
   }
   function suggestedName() {
     var base = (state.sheetName || state.fileName || 'revenue').replace(/[^\w.-]+/g, '_').replace(/\.(xlsx|xlsm|csv|tsv|txt)$/i, '');
-    var suffix = state.code ? '_' + state.code.replace(/[^\w.-]+/g, '_') : '';
+    var n = state.selectedCodes.length;
+    var suffix = n === 1 ? '_' + state.selectedCodes[0].replace(/[^\w.-]+/g, '_')
+               : (n > 1 ? '_' + n + 'codes' : '');
     return base + suffix + '_seller_split.csv';
   }
   function download(text, name, mime) {
