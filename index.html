@@ -15,24 +15,24 @@
    ===================================================================== */
 
 :root{
-  /* surfaces */
-  --ink:#0c1622;            /* header / deepest */
-  --ink-2:#15273f;          /* header gradient end */
-  --bg:#e8edf4;             /* body */
+  /* surfaces — eKart deep blue header */
+  --ink:#06294e;            /* header / deepest */
+  --ink-2:#0a4f9e;          /* header gradient end */
+  --bg:#e9eef6;             /* body */
   --surface:#ffffff;
-  --surface-2:#f4f7fb;
+  --surface-2:#f3f7fc;
   /* text */
   --tx:#10202f;
   --tx-soft:#56657a;
   --tx-faint:#8b98a8;
-  --tx-inv:#eaf1f8;
-  --tx-inv-soft:#9fb3c6;
+  --tx-inv:#eef4fc;
+  --tx-inv-soft:#a7c2e0;
   /* lines */
   --line:#e4e9f0;
   --line-strong:#ccd5e0;
-  /* semantic */
-  --ship:#0e7c86; --ship-deep:#0a626b; --ship-tint:#e1f0f2;
-  --vas:#d4811f;  --vas-deep:#b16710;  --vas-tint:#fbedd8;
+  /* semantic — Shipping = eKart blue, VAS = eKart yellow */
+  --ship:#1366d6; --ship-deep:#0a4aa6; --ship-tint:#e6effc;
+  --vas:#fdae01;  --vas-deep:#936300;  --vas-tint:#fef2d0;
   --ok:#1f9d57;
   /* effects */
   --shadow-sm:0 1px 2px rgba(16,32,47,.06);
@@ -79,7 +79,7 @@ body{
 .wordmark h1{
   margin:0; font-size:17px; font-weight:740; letter-spacing:-.01em; color:var(--tx-inv);
 }
-.wordmark h1 b{ color:#52d3c7; font-weight:740 } /* split accent in name */
+.wordmark h1 b{ color:#fdae01; font-weight:740 } /* split accent in name */
 .wordmark .kicker{
   font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
   color:var(--tx-inv-soft);
@@ -115,7 +115,7 @@ body{
 .btn{
   font:inherit; font-weight:600; cursor:pointer; border-radius:9px; padding:10px 18px;
   border:1px solid transparent; background:var(--ship); color:#fff; transition:filter .15s, transform .05s, box-shadow .15s;
-  box-shadow:0 1px 2px rgba(10,98,107,.4), 0 6px 16px rgba(14,124,134,.22);
+  box-shadow:0 1px 2px rgba(10,74,166,.38), 0 6px 16px rgba(19,102,214,.24);
 }
 .btn:hover{ filter:brightness(1.06) }
 .btn:active{ transform:translateY(1px) }
@@ -199,8 +199,8 @@ body{
   box-shadow:inset 0 1px 2px rgba(16,32,47,.08) }
 .splitbar .seg{ height:100%; display:flex; align-items:center; min-width:2px;
   transform-origin:left center; animation:growx .65s var(--ease) both }
-.splitbar .seg.ship{ background:linear-gradient(180deg,#13909b,var(--ship-deep)) }
-.splitbar .seg.vas{ background:linear-gradient(180deg,#e1932f,var(--vas-deep)) }
+.splitbar .seg.ship{ background:linear-gradient(180deg,#2f86ee,var(--ship-deep)) }
+.splitbar .seg.vas{ background:linear-gradient(180deg,#ffc233,#c98a06) }
 .splitbar .seg span{ color:#fff; font-family:var(--mono); font-size:11px; padding:0 10px; white-space:nowrap;
   text-shadow:0 1px 1px rgba(0,0,0,.18) }
 @keyframes growx{ from{transform:scaleX(0)} to{transform:scaleX(1)} }
@@ -405,10 +405,10 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
   <header class="masthead">
     <div class="masthead-inner">
       <svg class="brandmark" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <rect width="36" height="36" rx="9" fill="#0a1420"/>
-        <path d="M5 24 L18 6 L18 30 Z" fill="#13909b"/>
-        <path d="M18 6 L31 24 L18 30 Z" fill="#d4811f"/>
-        <rect x="5" y="30" width="26" height="2.4" rx="1.2" fill="#52d3c7"/>
+        <rect width="36" height="36" rx="9" fill="#06294e"/>
+        <path d="M5 24 L18 6 L18 30 Z" fill="#1366d6"/>
+        <path d="M18 6 L31 24 L18 30 Z" fill="#fdae01"/>
+        <rect x="5" y="30" width="26" height="2.4" rx="1.2" fill="#fdae01"/>
       </svg>
       <div class="wordmark">
         <h1>Seller Revenue <b>Split</b></h1>
@@ -423,13 +423,13 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
              aria-label="Upload the revenue report. Click or drop a file.">
       <div class="dzicon" aria-hidden="true">
         <svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg">
-          <path d="M13 17V5M13 5L8.5 9.5M13 5l4.5 4.5" fill="none" stroke="#0e7c86" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M4 16v3.5A2.5 2.5 0 0 0 6.5 22h13a2.5 2.5 0 0 0 2.5-2.5V16" fill="none" stroke="#0e7c86" stroke-width="2" stroke-linecap="round"/>
+          <path d="M13 17V5M13 5L8.5 9.5M13 5l4.5 4.5" fill="none" stroke="#1366d6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M4 16v3.5A2.5 2.5 0 0 0 6.5 22h13a2.5 2.5 0 0 0 2.5-2.5V16" fill="none" stroke="#1366d6" stroke-width="2" stroke-linecap="round"/>
         </svg>
       </div>
       <p class="lead">Drop the revenue report here, or click to choose</p>
       <p class="sub">It's read and aggregated entirely inside this browser tab.</p>
-      <button class="btn" type="button" id="chooseBtn">Choose file</button>
+      <button class="btn" type="button" id="chooseBtn" title="Upload the REVENUE Report">Choose file</button>
       <p class="formats">.xlsx &nbsp;·&nbsp; .xlsm &nbsp;·&nbsp; .csv &nbsp;·&nbsp; .tsv</p>
       <input id="file" type="file" accept=".xlsx,.xlsm,.csv,.tsv,.txt" hidden>
     </section>
@@ -516,7 +516,7 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
       <p>All processing is client-side. Shipping is the sum of <code>total_amt</code> per
         seller; value-added services is the sum of the billed VAS amount columns. Accrual
         code is <code>accrual_party_id_to</code>. Built for static hosting with no backend.</p>
-      <p class="ver">Seller Revenue Split · v2.2 · single file · runs offline</p>
+      <p class="ver">Seller Revenue Split · v2.3 · single file · runs offline</p>
     </footer>
   </main>
 
