@@ -516,7 +516,7 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
       <p>All processing is client-side. Shipping is the sum of <code>total_amt</code> per
         seller; value-added services is the sum of the billed VAS amount columns. Accrual
         code is <code>accrual_party_id_to</code>. Built for static hosting with no backend.</p>
-      <p class="ver">Seller Revenue Split · v2.1 · single file · runs offline</p>
+      <p class="ver">Seller Revenue Split · v2.2 · single file · runs offline</p>
     </footer>
   </main>
 
@@ -1524,6 +1524,10 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
 (function () {
   'use strict';
 
+  // Accrual codes pre-selected when a report loads. Any of these that aren't
+  // present in the uploaded file are simply ignored (no checkbox to tick).
+  var DEFAULT_CODES = ['PBR', 'PBZ', 'MZL', 'BBR', 'BBM', 'LUA', 'LUS', 'ZBU', 'ZBW', 'ZBV', 'ZBI'];
+
   var els = {
     drop: document.getElementById('dropzone'),
     file: document.getElementById('file'),
@@ -1732,7 +1736,7 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
     state.codes = result.codes || [];
     state.codeStats = result.codeStats || {};
     state.hasAccrual = !!result.hasAccrual && state.codes.length > 0;
-    state.selectedCodes = [];
+    state.selectedCodes = DEFAULT_CODES.filter(function (c) { return state.codes.indexOf(c) > -1; });
     state.vasProduct = '';
     state.expanded = {};
     populateCodeMS();
@@ -1747,10 +1751,18 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
     if (!els.codeMS) return;
     if (!state.hasAccrual) { els.codeMS.style.display = 'none'; return; }
     els.codeMS.style.display = '';
-    var rows = state.codes.map(function (c) {
+    var selSet = {};
+    state.selectedCodes.forEach(function (c) { selSet[c] = 1; });
+    // Show selected codes first (then alphabetical), so the defaults are visible.
+    var ordered = state.codes.slice().sort(function (a, b) {
+      var sa = selSet[a] ? 0 : 1, sb = selSet[b] ? 0 : 1;
+      if (sa !== sb) return sa - sb;
+      return a < b ? -1 : (a > b ? 1 : 0);
+    });
+    var rows = ordered.map(function (c) {
       var cs = state.codeStats[c] || { shipments: 0 };
       return '<label class="ms-opt" data-code="' + esc(c) + '">' +
-        '<input type="checkbox" value="' + esc(c) + '">' +
+        '<input type="checkbox" value="' + esc(c) + '"' + (selSet[c] ? ' checked' : '') + '>' +
         '<span class="ms-name">' + esc(c) + '</span>' +
         '<span class="ms-meta num">' + intFmt.format(cs.shipments) + '</span></label>';
     }).join('');
