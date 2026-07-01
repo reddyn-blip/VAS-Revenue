@@ -551,7 +551,7 @@ td.col-rps:last-of-type, th[data-key="rps"]{ }
       <p>All processing is client-side. Shipping is the sum of <code>total_amt</code> per
         seller; value-added services is the sum of the billed VAS amount columns. Accrual
         code is <code>accrual_party_id_to</code>. Built for static hosting with no backend.</p>
-      <p class="ver">Seller Revenue Split · v2.5 · single file · runs offline</p>
+      <p class="ver">Seller Revenue Split · v2.6 · single file · runs offline</p>
     </footer>
   </main>
 
@@ -2265,19 +2265,23 @@ td.col-rps:last-of-type, th[data-key="rps"]{ }
 
   // ---- export ----
   els.exportSummary.addEventListener('click', function () {
-    var headers = ['accrual_code', 'seller_email', 'company_name', 'seller_id', 'shipments', 'shipping_total', 'value_added_total', 'grand_total'];
+    var headers = ['accrual_codes', 'vas_product_focus', 'seller_email', 'company_name', 'seller_id',
+      'shipments', 'shipping_total', 'value_added_total', 'grand_total',
+      'shipping_rps', 'value_added_rps', 'combined_rps'];
     RevenueCore.VAS_FIELDS.forEach(function (p) { headers.push('vas_' + p[1].replace(/^total_|_amt$/g, '')); });
     var lines = [headers.join(',')];
     var codeCell = state.selectedCodes.length ? state.selectedCodes.join('|') : 'ALL';
-    // Always export the complete per-seller breakdown (every VAS product column),
-    // respecting the accrual-code filter but not the on-screen product focus, so
-    // nothing is lost. Highest grand total first.
-    var rowsOut = state.viewFull.slice().sort(function (a, b) {
-      return (b.shipping + b.vasTotal) - (a.shipping + a.vasTotal);
-    });
-    rowsOut.forEach(function (s) {
-      var grand = s.shipping + s.vasTotal;
-      var row = [codeCell, s.email, s.company, s.sellerId, s.shipments, round2(s.shipping), round2(s.vasTotal), round2(grand)];
+    var prodCell = state.vasProduct || 'ALL';
+    // Export exactly what's visible: the rows in state.filtered already reflect the
+    // accrual-code selection, the VAS-product focus, and the search box, in the
+    // current sort order. value_added_total / grand_total / RPS match the on-screen
+    // values (i.e. the focused product's figures when a VAS product is selected).
+    state.filtered.forEach(function (s) {
+      var n = s.shipments || 0;
+      var grand = s.total || (s.shipping + s.vasTotal);
+      var row = [codeCell, prodCell, s.email, s.company, s.sellerId, n,
+        round2(s.shipping), round2(s.vasTotal), round2(grand),
+        round2(n ? s.shipping / n : 0), round2(n ? s.vasTotal / n : 0), round2(n ? grand / n : 0)];
       RevenueCore.VAS_FIELDS.forEach(function (p) { row.push(round2((s.vas && s.vas[p[0]]) || 0)); });
       lines.push(row.map(csvCell).join(','));
     });
@@ -2293,6 +2297,7 @@ td.col-rps:last-of-type, th[data-key="rps"]{ }
     var n = state.selectedCodes.length;
     var suffix = n === 1 ? '_' + state.selectedCodes[0].replace(/[^\w.-]+/g, '_')
                : (n > 1 ? '_' + n + 'codes' : '');
+    if (state.vasProduct) suffix += '_' + state.vasProduct.replace(/[^\w.-]+/g, '_');
     return base + suffix + '_seller_split.csv';
   }
   function download(text, name, mime) {
