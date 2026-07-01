@@ -268,9 +268,9 @@ body{
 .search::placeholder{ color:var(--tx-faint) }
 
 /* ---------- Table ---------- */
-.table-wrap{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden;
+.table-wrap{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg); overflow-x:auto; overflow-y:hidden;
   box-shadow:var(--shadow) }
-table{ width:100%; border-collapse:collapse; font-size:13.5px }
+table{ width:100%; min-width:760px; border-collapse:collapse; font-size:13.5px }
 thead th{
   position:sticky; top:0; z-index:5; background:var(--surface-2);
   font-family:var(--mono); font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--tx-faint);
@@ -399,6 +399,36 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
   .ms-pop{ left:0; right:auto; width:100% }
 }
 
+/* ---------- Revenue per shipment ---------- */
+.pps{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px }
+.pps-item{ position:relative; border:1px solid var(--line); border-radius:12px; padding:14px 16px; background:var(--surface-2) }
+.pps-item::before{ content:""; position:absolute; left:0; top:12px; bottom:12px; width:3px; border-radius:3px; background:var(--line-strong) }
+.pps-item.ship::before{ background:var(--ship) }
+.pps-item.vas::before{ background:var(--vas) }
+.pps-item.all::before{ background:linear-gradient(180deg,var(--ship),var(--vas)) }
+.pps-item .pl{ display:block; font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--tx-faint); margin-bottom:6px; padding-left:8px }
+.pps-item .pv{ display:block; font-size:22px; font-weight:720; letter-spacing:-.01em; padding-left:8px }
+.pps-item.ship .pv{ color:var(--ship-deep) }
+.pps-item.vas .pv{ color:var(--vas-deep) }
+.pps-item.all .pv{ color:var(--tx) }
+.pps-note{ margin-top:10px; font-size:12px; color:var(--tx-faint) }
+
+/* RPS (revenue-per-shipment) columns + detail chips */
+th.col-rps{ white-space:nowrap }
+.chips.per{ margin-bottom:14px }
+.chip.pc-ship .swatch{ background:var(--ship) }
+.chip.pc-vas .swatch{ background:var(--vas) }
+.chip.pc-all .swatch{ background:linear-gradient(90deg,var(--ship),var(--vas)) }
+
+/* the combined RPS column stands out slightly */
+td.col-rps:last-of-type, th[data-key="rps"]{ }
+
+@media (max-width:1200px){ td.col-rps-part, th.col-rps-part{ display:none } }
+@media (max-width:940px){ td.col-rps, th.col-rps{ display:none } }
+@media (max-width:620px){
+  .pps{ grid-template-columns:1fr }
+}
+
   </style>
 </head>
 <body>
@@ -462,6 +492,8 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
         <div class="legend" id="legend"></div>
       </div>
 
+      <div class="split-panel" id="ppsPanel"></div>
+
       <div class="split-panel" id="vasPanel"></div>
 
       <div class="toolbar">
@@ -503,6 +535,9 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
               <th role="button" tabindex="0" data-key="shipping" class="right">Shipping <span class="arrow">▼</span></th>
               <th role="button" tabindex="0" data-key="vas" class="right">Value-added <span class="arrow">▼</span></th>
               <th role="button" tabindex="0" data-key="total" class="right sorted">Total <span class="arrow">▼</span></th>
+              <th role="button" tabindex="0" data-key="rpsShip" class="right col-rps col-rps-part">RPS Ship <span class="arrow">▼</span></th>
+              <th role="button" tabindex="0" data-key="rpsVas" class="right col-rps col-rps-part">RPS VAS <span class="arrow">▼</span></th>
+              <th role="button" tabindex="0" data-key="rps" class="right col-rps">RPS <span class="arrow">▼</span></th>
               <th class="col-split">Split</th>
             </tr>
           </thead>
@@ -516,7 +551,7 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
       <p>All processing is client-side. Shipping is the sum of <code>total_amt</code> per
         seller; value-added services is the sum of the billed VAS amount columns. Accrual
         code is <code>accrual_party_id_to</code>. Built for static hosting with no backend.</p>
-      <p class="ver">Seller Revenue Split · v2.3 · single file · runs offline</p>
+      <p class="ver">Seller Revenue Split · v2.5 · single file · runs offline</p>
     </footer>
   </main>
 
@@ -1540,6 +1575,7 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
     cards: document.getElementById('cards'),
     meta: document.getElementById('meta'),
     splitbar: document.getElementById('splitbar'),
+    ppsPanel: document.getElementById('ppsPanel'),
     legend: document.getElementById('legend'),
     search: document.getElementById('search'),
     count: document.getElementById('count'),
@@ -2007,6 +2043,21 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
     els.legend.innerHTML =
       '<span class="ship"><i></i>Shipping &nbsp;<b>' + money(totalShip) + '</b> &nbsp;(' + shipPct.toFixed(2) + '%)</span>' +
       '<span class="vas"><i></i>Value-added services &nbsp;<b>' + money(totalVas) + '</b> &nbsp;(' + vasPct.toFixed(2) + '%)</span>';
+
+    // Revenue per shipment (respects the active filters)
+    if (els.ppsPanel) {
+      var pShip = shipments > 0 ? totalShip / shipments : 0;
+      var pVas = shipments > 0 ? totalVas / shipments : 0;
+      var pAll = shipments > 0 ? grand / shipments : 0;
+      els.ppsPanel.innerHTML =
+        '<div class="title">Revenue per shipment</div>' +
+        '<div class="pps">' +
+          '<div class="pps-item ship"><span class="pl">Shipping</span><span class="pv num">' + money(pShip) + '</span></div>' +
+          '<div class="pps-item vas"><span class="pl">Value-added</span><span class="pv num">' + money(pVas) + '</span></div>' +
+          '<div class="pps-item all"><span class="pl">Combined</span><span class="pv num">' + money(pAll) + '</span></div>' +
+        '</div>' +
+        '<div class="pps-note">Average across ' + intFmt.format(shipments) + ' shipments' + (nSel ? ' (selected codes)' : '') + '.</div>';
+    }
   }
 
   function card(k, v, x, cls) {
@@ -2015,12 +2066,20 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
   }
 
   // ---- sorting ----
+  function rpsVal(s, kind) {
+    var n = s.shipments; if (!n) return 0;
+    var v = kind === 'shipping' ? s.shipping : kind === 'vas' ? s.vasTotal : (s.total || (s.shipping + s.vasTotal));
+    return v / n;
+  }
   var SORTS = {
     seller: function (a, b) { return (a.email || '').localeCompare(b.email || ''); },
     shipments: function (a, b) { return a.shipments - b.shipments; },
     shipping: function (a, b) { return a.shipping - b.shipping; },
     vas: function (a, b) { return a.vasTotal - b.vasTotal; },
-    total: function (a, b) { return a.total - b.total; }
+    total: function (a, b) { return a.total - b.total; },
+    rpsShip: function (a, b) { return rpsVal(a, 'shipping') - rpsVal(b, 'shipping'); },
+    rpsVas: function (a, b) { return rpsVal(a, 'vas') - rpsVal(b, 'vas'); },
+    rps: function (a, b) { return rpsVal(a, 'total') - rpsVal(b, 'total'); }
   };
   els.thead.addEventListener('click', function (e) {
     var th = e.target.closest('th[role=button]');
@@ -2144,6 +2203,9 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
       '<td class="right money ship">' + money(s.shipping) + '</td>' +
       '<td class="right money vas ' + (s.vasTotal ? '' : 'vas-zero') + '">' + (s.vasTotal ? money(s.vasTotal) : '\u2014') + '</td>' +
       '<td class="right money total">' + money(grand) + '</td>' +
+      '<td class="right money ship col-rps col-rps-part">' + (s.shipments > 0 ? money(s.shipping / s.shipments) : '\u2014') + '</td>' +
+      '<td class="right money vas col-rps col-rps-part ' + (s.vasTotal ? '' : 'vas-zero') + '">' + (s.shipments > 0 ? money(s.vasTotal / s.shipments) : '\u2014') + '</td>' +
+      '<td class="right money total col-rps">' + (s.shipments > 0 ? money(grand / s.shipments) : '\u2014') + '</td>' +
       '<td class="col-split"><div class="minibar" title="Shipping ' + sp.toFixed(1) + '% / VAS ' + vp.toFixed(1) + '%">' +
         '<div class="s" style="width:' + sp + '%"></div><div class="v" style="width:' + vp + '%"></div></div></td>' +
       '</tr>';
@@ -2152,20 +2214,28 @@ footer .ver{ font-family:var(--mono); font-size:11px; letter-spacing:.04em }
   }
 
   function detailHtml(s) {
+    var n = s.shipments || 0;
+    var grand = s.total || (s.shipping + s.vasTotal);
+    var per = '<div class="dt">RPS \u00b7 revenue per shipment \u00b7 ' + intFmt.format(n) + ' shipments' +
+      (s.sellerId ? ' \u00b7 seller id ' + esc(s.sellerId) : '') + '</div>' +
+      '<div class="chips per">' +
+        '<span class="chip pc-ship"><span class="swatch"></span>Shipping <b>' + (n ? money(s.shipping / n) : '\u2014') + '</b></span>' +
+        '<span class="chip pc-vas"><span class="swatch"></span>Value-added <b>' + (n ? money(s.vasTotal / n) : '\u2014') + '</b></span>' +
+        '<span class="chip pc-all"><span class="swatch"></span>Combined <b>' + (n ? money(grand / n) : '\u2014') + '</b></span>' +
+      '</div>';
     var items = RevenueCore.VAS_FIELDS.map(function (p) { return [p[0], s.vas[p[0]] || 0]; })
       .filter(function (x) { return x[1] > 0; })
       .sort(function (a, b) { return b[1] - a[1]; });
-    var inner;
+    var vasPart;
     if (!items.length) {
-      inner = '<div class="detail-none">No value-added services billed to this seller in this period. Shipping revenue: ' + money(s.shipping) +
-        (s.sellerId ? ' \u00b7 seller id ' + esc(s.sellerId) : '') + '.</div>';
+      vasPart = '<div class="detail-none">No value-added services billed to this seller in this period.</div>';
     } else {
-      inner = '<div class="dt">Value-added services breakdown' + (s.sellerId ? ' \u00b7 seller id ' + esc(s.sellerId) : '') + '</div><div class="chips">' +
+      vasPart = '<div class="dt">Value-added services breakdown</div><div class="chips">' +
         items.map(function (x) {
           return '<span class="chip"><span class="swatch"></span>' + esc(x[0]) + ' <b>' + money(x[1]) + '</b></span>';
         }).join('') + '</div>';
     }
-    return '<tr class="detail"><td colspan="8"><div class="detail-inner">' + inner + '</div></td></tr>';
+    return '<tr class="detail"><td colspan="11"><div class="detail-inner">' + per + vasPart + '</div></td></tr>';
   }
 
   els.tbody.addEventListener('click', function (e) {
